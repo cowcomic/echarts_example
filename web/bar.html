@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <!-- 引入jquery -->
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.js"></script>
+    <!-- 引入 echarts.js -->
+    <script src="https://cdn.bootcss.com/echarts/4.1.0/echarts.js"></script>
+</head>
+
+<body>
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="main" style="width: 1200px;height:800px;"></div>
+    <script type="text/javascript">
+        var allData = [5];
+
+        // 把getJson改成同步的，这样后面的内容就不用非得写在回调里面了
+        // 当然，如果页面还有其他需要一部的ajax请求，那这个还是别这样用了
+        $.ajaxSettings.async = false;
+        // 加载数据
+        $.getJSON("化妆品json.txt", function (result) {
+            $.each(result, function (i, field) {
+                var day = field.data.results.currDate.split("~")[0]
+                var data = field.data.results.current.slice(20);
+
+                // 涉及到一个排序问题，我就偷懒了，原始数据是按日期降序的，这里直接反向填充数组
+                allData[5 - i] = data;
+                console.log(i + "\t" + day);
+            });
+        })
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('main'));
+
+        myChart.title = '化妆品资讯指数排行榜 - 条形图';
+
+        option = {
+            title: {
+                text: '化妆品资讯指数排行榜',
+                subtext: '数据来自百度指数'
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+            },
+            dataset: {
+                dimensions: ['item', 'value'],
+                source: allData[0]
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis: {
+            },
+            yAxis: {
+                type: 'category',
+                // 反向坐标轴，否则是升序的
+                inverse: true
+            },
+            series: [
+                { type: 'bar' }
+            ]
+        };
+
+
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+
+        var count = 0;
+        // 周期调用
+        var interval = setInterval(function () {
+            count++;
+            myChart.setOption({
+                dataset: {
+                    dimensions: ['item', 'value'],
+                    source: allData[count]
+
+                }
+            });
+            if (count == 5){
+                console.log(count);
+                // 停止周期调用
+                clearInterval(interval);
+            }
+        }, 2000);
+    </script>
+</body>
+
+</html>
